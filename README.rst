@@ -18,12 +18,18 @@ Image Header
      :alt: Updates
 
 
-Lightweight library for reading images metadata
+Lightweight library for reading images metadata.
 
 
 * Free software: MIT license
 * Documentation: https://imageh.readthedocs.io.
 
+Why
+-------
+
+This lightweight library is focused on extracting all possible information from an image header without loading the entire bytes in memory.
+
+I found PIL, despite being a very good library, lacks the possibility to do that. Moreover, PIL has a lot of dependencies.
 
 Features
 --------
