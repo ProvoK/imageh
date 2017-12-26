@@ -12,7 +12,7 @@ from tests.conftest import IMAGES, UNSUPPORTED_IMAGES
 @pytest.mark.parametrize('filename, format_, width, height', IMAGES)
 def test_parse_reads_correctly(filename, format_, width, height):
     descriptor = imageh.parse(filename)
-    assert format_ == descriptor.format_
+    assert format_ == descriptor.format
     assert width == descriptor.width
     assert height == descriptor.height
 
@@ -21,7 +21,7 @@ def test_parse_reads_correctly(filename, format_, width, height):
 def test_parse_fd_reads_correctly(filename, format_, width, height):
     with open(filename, 'rb') as fd:
         descriptor = imageh.parse_fd(fd)
-        assert format_ == descriptor.format_
+        assert format_ == descriptor.format
         assert width == descriptor.width
         assert height == descriptor.height
 

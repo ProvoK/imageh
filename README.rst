@@ -24,20 +24,29 @@ Lightweight library for reading images metadata.
 * Free software: MIT license
 * Documentation: https://imageh.readthedocs.io.
 
-Why
--------
 
-This lightweight library is focused on extracting all possible information from an image header without loading the entire bytes in memory.
+Why Imageh? Why not PIL?
+------------------------
+
+Imageh (Image Header) is lightweight library focused on extracting all possible information from an image header without loading the entire bytes in memory. Only the strict necessary bytes will be read.
 
 I found PIL, despite being a very good library, lacks the possibility to do that. Moreover, PIL has a lot of dependencies.
+
+So, if you are not already using PIL and/or you only need to know basic information about an image, try Imageh!
+
 
 Features
 --------
 
-* TODO
+Imageh let's you retrieve image's metadata from file-like objects or even an URL.
+
+- Supported formats: PNG, GIF. (More coming, please contribute!)
+- An easy CLI interface to use Imageh as an utility.
+- Multiple output formats: JSON, CSV. (More coming, please contribute!)
+
 
 Credits
----------
+-------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
