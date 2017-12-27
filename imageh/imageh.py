@@ -4,6 +4,8 @@ import re
 import struct
 from typing import List, ByteString, BinaryIO
 
+import attr
+
 
 class ImagehError(Exception):
     pass
@@ -17,7 +19,7 @@ class UnsupportedFormatError(ImagehError):
     pass
 
 
-class CustomEncoder(json.JSONEncoder):
+class SerializerJSONEncoder(json.JSONEncoder):
 
     def default(self, o):
         if isinstance(o, Enum):
@@ -25,22 +27,15 @@ class CustomEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class ImageDescriptor(object):
-
-    def __init__(self, format, width, height):
-        # type: (str, int, int) -> None
-
-        self.format = format
-        self.width = width
-        self.height = height
+class Serializer(object):
 
     def json(self):
-        return json.dumps(self.__dict__, cls=CustomEncoder)
+        return json.dumps(self.__dict__, cls=SerializerJSONEncoder)
 
 
-class PNGColourType(Enum):
+class PNGColorType(Enum):
     GREY_SCALE = 0
-    TRUE_COLOUR = 2
+    TRUE_COLOR = 2
     INDEXED_COLOUR = 3
     GREY_SCALE_ALPHA = 4
     TRUE_COLOUR_ALPHA = 6
@@ -63,22 +58,32 @@ class PNGInterlaceType(Enum):
     ADAM7 = 1
 
 
-class PNGDescriptor(ImageDescriptor):
+@attr.s
+class BaseDescriptor(object):
+    format = attr.ib(init=False)
+    width = attr.ib()
+    height = attr.ib()
 
-    def __init__(self,
-                 width,
-                 height,
-                 bit_depth=None,
-                 colour_type=None,
-                 compression=None,
-                 filter_method=None,
-                 interlace_method=None):
-        super(PNGDescriptor, self).__init__('PNG', width, height)
-        self.bit_depth = bit_depth
-        self.colour_type = PNGColourType(colour_type)
-        self.compression = PNGCompressionType(compression)
-        self.filter_method = PNGFilterType(filter_method)
-        self.interlace_method = PNGInterlaceType(interlace_method)
+
+@attr.s
+class PNGDescriptor(BaseDescriptor, Serializer):
+    format = 'PNG'
+    bit_depth = attr.ib()
+    color_type = attr.ib()
+    compression = attr.ib()
+    filter_method = attr.ib()
+    interlace_method = attr.ib()
+
+
+@attr.s
+class GIFDescriptor(BaseDescriptor, Serializer):
+    format = 'GIF'
+    version = attr.ib()
+    pixel_aspect_ratio = attr.ib()
+    color_bits = attr.ib()
+    color_table = attr.ib()
+    color_table_size = attr.ib()
+    color_table_sorted = attr.ib()
 
 
 class BaseParser(object):
@@ -116,11 +121,16 @@ class PNGParser(BaseParser):
         """
         chunk = self.fd.read(42)
         ihdr = self.ihdr_reg.search(chunk).group(1)
-        # Width, Height, Bit depth, Colour type, Compression method
+        # Width, Height, Bit depth, Color type, Compression method
         # Filter method, Interlace method
-        values = list(struct.unpack('>LLBBBBB', ihdr[0:13]))
-        desc = PNGDescriptor(*values)
-        return desc
+        w, h, bd, ct, cm, fm, im = struct.unpack('>2L5B', ihdr[0:13])
+        return PNGDescriptor(
+            w, h, bd,
+            PNGColorType(ct),
+            PNGCompressionType(cm),
+            PNGFilterType(fm),
+            PNGInterlaceType(im)
+        )
 
 
 class GIFParser(BaseParser):
@@ -130,9 +140,26 @@ class GIFParser(BaseParser):
         return bool(re.search(b'GIF', head))
 
     def parse(self):
-        chunk = self.fd.read(24)
-        w, h = map(int, struct.unpack('<HH', chunk[6:10]))
-        return ImageDescriptor(format='GIF', width=w, height=h)
+        """
+        Sources:
+            - https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+        """
+        chunk = self.fd.read(13)
+
+        # Version, width, height, packed, background color index, pixel aspect ratio
+        ver, w, h, pack, bci, par = struct.unpack('<3sHH3B', chunk[3:])
+
+        packed_bin = bin(pack)[2:]
+        color_table_flag = bool(packed_bin[0])
+        color_resolution = int(packed_bin[1:4], 2) + 1
+        sort_flag = bool(packed_bin[4])
+        color_table_size = int(packed_bin[5:], 2)
+
+        return GIFDescriptor(
+            w, h, ver.decode('ascii'), par,
+            color_resolution, color_table_flag,
+            color_table_size, sort_flag
+        )
 
 
 def parse(path: str):
