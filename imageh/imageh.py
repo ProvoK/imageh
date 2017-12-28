@@ -50,7 +50,7 @@ class PNGFilterType(Enum):
 
 
 class PNGCompressionType(Enum):
-    STANDARD = 0
+    DEFLATE_INFLATE = 0
 
 
 class PNGInterlaceType(Enum):
