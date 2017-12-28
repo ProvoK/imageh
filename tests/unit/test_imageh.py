@@ -9,22 +9,17 @@ import pytest
 from tests.conftest import IMAGES, UNSUPPORTED_IMAGES
 
 
-@pytest.mark.parametrize('filename, format_, width, height', IMAGES)
-def test_parse_reads_correctly(filename, format_, width, height):
-    descriptor = imageh.parse(filename)
-    print(descriptor.json())
-    assert format_ == descriptor.format
-    assert width == descriptor.width
-    assert height == descriptor.height
+@pytest.mark.parametrize('filename, descriptor', IMAGES)
+def test_parse_generate_correct_descriptor(filename, descriptor):
+    generated_descriptor = imageh.parse(filename)
+    assert descriptor == generated_descriptor
 
 
-@pytest.mark.parametrize('filename, format_, width, height', IMAGES)
-def test_parse_fd_reads_correctly(filename, format_, width, height):
+@pytest.mark.parametrize('filename, descriptor', IMAGES)
+def test_parse_fd_reads_correctly(filename, descriptor):
     with open(filename, 'rb') as fd:
-        descriptor = imageh.parse_fd(fd)
-        assert format_ == descriptor.format
-        assert width == descriptor.width
-        assert height == descriptor.height
+        generated_descriptor = imageh.parse_fd(fd)
+        assert descriptor == generated_descriptor
 
 
 @pytest.mark.parametrize('filename', UNSUPPORTED_IMAGES)

@@ -42,7 +42,7 @@ class PNGColorType(Enum):
 
 
 class PNGFilterType(Enum):
-    DEFAULT = 0
+    ADAPTIVE = 0
     SUB = 1
     UP = 2
     AVERAGE = 3
