@@ -11,10 +11,6 @@ class ImagehError(Exception):
     pass
 
 
-class UnknownFormatError(ImagehError):
-    pass
-
-
 class UnsupportedFormatError(ImagehError):
     pass
 
@@ -107,7 +103,7 @@ class BaseParser(object):
 
 
 class PNGParser(BaseParser):
-    ihdr_reg = re.compile(b'IHDR(.*)IDAT', flags=re.DOTALL)
+    ihdr_reg = re.compile(b'IHDR', flags=re.DOTALL)
 
     @staticmethod
     def check_format(head):
@@ -119,8 +115,9 @@ class PNGParser(BaseParser):
             - https://en.wikipedia.org/wiki/Portable_Network_Graphics
             - https://www.w3.org/TR/2003/REC-PNG-20031110/
         """
-        chunk = self.fd.read(42)
-        ihdr = self.ihdr_reg.search(chunk).group(1)
+        chunk = self.fd.read(50)
+        ihdr_pos = self.ihdr_reg.search(chunk).start() + 4
+        ihdr = chunk[ihdr_pos: ihdr_pos + 13]
         # Width, Height, Bit depth, Color type, Compression method
         # Filter method, Interlace method
         w, h, bd, ct, cm, fm, im = struct.unpack('>2L5B', ihdr[0:13])
