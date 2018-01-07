@@ -26,7 +26,7 @@ class SerializerJSONEncoder(json.JSONEncoder):
 class Serializer(object):
 
     def json(self):
-        return json.dumps(self.__dict__, cls=SerializerJSONEncoder)
+        return json.dumps(self.__dict__, sort_keys=True, cls=SerializerJSONEncoder)
 
 
 class PNGColorType(Enum):
