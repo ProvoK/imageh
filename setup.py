@@ -1,9 +1,10 @@
 # !/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup, find_packages
+
 setup(
-    name='imageh',
-    packages=[],
+    name='Image Header',
+    packages=['imageh',],
     version='0.1.0',
     description='Lightweight header reader for images.',
     author='Vittorio Camisa',
@@ -16,20 +17,21 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development',
     ],
-    py_modules=['imageh'],
-    entry_points='''
-        [console_scripts]
-        imageh=imageh.cli:cli
-    '''
+    install_requires=[
+        'Click',
+    ],
+    entry_points={
+        'console_scripts': [
+            'imageh = imageh.cli:cli'
+        ]
+    }
 )
