@@ -2,7 +2,7 @@ from enum import Enum
 import json
 import re
 import struct
-from typing import List, ByteString, BinaryIO
+from urllib.parse import urlparse
 
 import attr
 
@@ -55,31 +55,36 @@ class PNGInterlaceType(Enum):
 
 
 @attr.s
-class BaseDescriptor(object):
+class Descriptor(object):
+    width = attr.ib(init=False)
+    height = attr.ib(init=False)
+    bytes_read = attr.ib(init=False)
     format = attr.ib(init=False)
-    width = attr.ib()
-    height = attr.ib()
+    filename = attr.ib(init=False)
+    url = attr.ib(init=False)
+    extension = attr.ib(init=False)
+    aspect_ratio = attr.ib(init=False)
 
 
 @attr.s
-class PNGDescriptor(BaseDescriptor, Serializer):
+class PNGDescriptor(Descriptor, Serializer):
     format = 'PNG'
-    bit_depth = attr.ib()
-    color_type = attr.ib()
-    compression = attr.ib()
-    filter_method = attr.ib()
-    interlace_method = attr.ib()
+    bit_depth = attr.ib(init=False)
+    color_type = attr.ib(init=False)
+    compression = attr.ib(init=False)
+    filter_method = attr.ib(init=False)
+    interlace_method = attr.ib(init=False)
 
 
 @attr.s
-class GIFDescriptor(BaseDescriptor, Serializer):
+class GIFDescriptor(Descriptor, Serializer):
     format = 'GIF'
-    version = attr.ib()
-    pixel_aspect_ratio = attr.ib()
-    color_bits = attr.ib()
-    color_table = attr.ib()
-    color_table_size = attr.ib()
-    color_table_sorted = attr.ib()
+    version = attr.ib(init=False)
+    pixel_aspect_ratio = attr.ib(init=False)
+    color_bits = attr.ib(init=False)
+    has_color_table = attr.ib(init=False)
+    color_table_size = attr.ib(init=False)
+    color_table_sorted = attr.ib(init=False)
 
 
 class BaseParser(object):
@@ -104,6 +109,7 @@ class BaseParser(object):
 
 class PNGParser(BaseParser):
     ihdr_reg = re.compile(b'IHDR', flags=re.DOTALL)
+    bytes_to_read = 50
 
     @staticmethod
     def check_format(head):
@@ -115,22 +121,26 @@ class PNGParser(BaseParser):
             - https://en.wikipedia.org/wiki/Portable_Network_Graphics
             - https://www.w3.org/TR/2003/REC-PNG-20031110/
         """
-        chunk = self.fd.read(50)
+        chunk = self.fd.read(self.bytes_to_read)
         ihdr_pos = self.ihdr_reg.search(chunk).start() + 4
         ihdr = chunk[ihdr_pos: ihdr_pos + 13]
         # Width, Height, Bit depth, Color type, Compression method
         # Filter method, Interlace method
         w, h, bd, ct, cm, fm, im = struct.unpack('>2L5B', ihdr[0:13])
-        return PNGDescriptor(
-            w, h, bd,
-            PNGColorType(ct),
-            PNGCompressionType(cm),
-            PNGFilterType(fm),
-            PNGInterlaceType(im)
-        )
+        descriptor = PNGDescriptor()
+        descriptor.width = w
+        descriptor.height = h
+        descriptor.bytes_read = self.bytes_to_read
+        descriptor.bit_depth = bd
+        descriptor.color_type = PNGColorType(ct)
+        descriptor.compression = PNGCompressionType(cm)
+        descriptor.filter_method = PNGFilterType(fm)
+        descriptor.interlace_method = PNGInterlaceType(im)
+        return descriptor
 
 
 class GIFParser(BaseParser):
+    bytes_to_read = 13
 
     @staticmethod
     def check_format(head):
@@ -141,41 +151,70 @@ class GIFParser(BaseParser):
         Sources:
             - https://www.w3.org/Graphics/GIF/spec-gif89a.txt
         """
-        chunk = self.fd.read(13)
+        chunk = self.fd.read(self.bytes_to_read)
 
         # Version, width, height, packed, background color index, pixel aspect ratio
         ver, w, h, pack, bci, par = struct.unpack('<3sHH3B', chunk[3:])
 
         packed_bin = bin(pack)[2:]
-        color_table_flag = bool(packed_bin[0])
-        color_resolution = int(packed_bin[1:4], 2) + 1
-        sort_flag = bool(packed_bin[4])
-        color_table_size = int(packed_bin[5:], 2)
 
-        return GIFDescriptor(
-            w, h, ver.decode('ascii'), par,
-            color_resolution, color_table_flag,
-            color_table_size, sort_flag
-        )
+        descriptor = GIFDescriptor()
+        descriptor.version = ver.decode('ascii')
+        descriptor.width = w
+        descriptor.height = h
+        descriptor.bytes_read = self.bytes_to_read
+        descriptor.pixel_aspect_ratio = par
+        descriptor.color_bits = int(packed_bin[1:4], 2) + 1
+        descriptor.has_color_table = bool(packed_bin[0])
+        descriptor.color_table_size = int(packed_bin[5:], 2)
+        descriptor.color_table_sorted = bool(packed_bin[4])
+
+        return descriptor
 
 
-def parse(path: str):
-    # type: (str) -> ImageDescriptor
+def calculate_aspect_ratio(width, height):
+    # type: (int, int) -> str
+    ratio = round(width/height, 1)
+    if ratio % 1 == 0:
+        ratio = int(ratio)
+    return '{}:{}'.format(ratio, 1)
+
+
+def parse_uri(url):
+    # type: (str) -> (str, str)
+    """
+    Returns tuple with (filename, extension) as strings.
+    """
+    p = urlparse(url)
+    filename = p.geturl().split('/')[-1]
+    extension = filename.split('.')[-1] if '.' in filename else ''
+    return filename, extension
+
+
+def parse(url: str):
+    # type: (str) -> Descriptor
     """
     TODO DOC
-    :param path: 
-    :return: 
+    :param url:
+    :return:
     """
-    with open(path, 'rb') as fd:
-        return parse_fd(fd=fd)
+    with open(url, 'rb') as fd:
+        desc = parse_fd(fd=fd)
+        filename, extension = parse_uri(url)
+        desc.url = url
+        desc.filename = filename
+        desc.extension = extension
+        desc.aspect_ratio = calculate_aspect_ratio(desc.width, desc.height)
+
+        return desc
 
 
 def parse_fd(fd):
-    # type: (BinaryIO) -> ImageDescriptor
+    # type: (BinaryIO) -> Descriptor
     """
     TODO DOC
-    :param fd: 
-    :return: 
+    :param fd:
+    :return:
     """
     chunk = fd.read(4)
     if PNGParser.check_format(chunk):
