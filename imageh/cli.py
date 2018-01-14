@@ -16,12 +16,13 @@ INVALID_PATH_ERROR = 'file %s not found'
 def cli(filename):
     """Console script for imageh."""
     try:
-        desc = imageh.parse(filename)
+        desc = imageh.analyze(filename)
         print(desc.json())
     except FileNotFoundError:
         print(json.dumps(dict(error=INVALID_PATH_ERROR % filename)))
     except imageh.UnsupportedFormatError:
         print(json.dumps(dict(error=UNSUPPORTED_ERROR)))
+
 
 if __name__ == "__main__":
     cli()

@@ -10,8 +10,8 @@ from tests.conftest import IMAGES, UNSUPPORTED_IMAGES
 
 
 @pytest.mark.parametrize('filename, descriptor', IMAGES)
-def test_parse_generate_correct_descriptor(filename, descriptor):
-    generated_descriptor = imageh.parse(filename)
+def test_analyze_generate_correct_descriptor(filename, descriptor):
+    generated_descriptor = imageh.analyze(filename)
     assert descriptor == generated_descriptor
 
 
@@ -32,4 +32,4 @@ def test_parse_fd_reads_correctly(filename, descriptor):
 @pytest.mark.parametrize('filename', UNSUPPORTED_IMAGES)
 def test_parse_raises_exception_with_unsupported_file_formats(filename):
     with pytest.raises(imageh.UnsupportedFormatError):
-        imageh.parse(filename)
+        imageh.analyze(filename)

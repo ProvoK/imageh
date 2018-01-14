@@ -193,7 +193,7 @@ def parse_uri(url):
     return ParsedURL(scheme=p.scheme, filename=filename, extension=extension)
 
 
-def parse(url: str):
+def analyze(url: str):
     # type: (str) -> Descriptor
     """
     TODO DOC
