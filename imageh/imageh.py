@@ -1,3 +1,4 @@
+from collections import namedtuple
 from enum import Enum
 import json
 import re
@@ -180,15 +181,16 @@ def calculate_aspect_ratio(width, height):
     return '{}:{}'.format(ratio, 1)
 
 
+ParsedURL = namedtuple('ParsedURL', ['scheme', 'filename', 'extension'])
+
+
 def parse_uri(url):
-    # type: (str) -> (str, str)
-    """
-    Returns tuple with (filename, extension) as strings.
-    """
+    # type: (str) -> ParsedURL
+    """Returns a ParsedURL namedtuple."""
     p = urlparse(url)
     filename = p.geturl().split('/')[-1]
     extension = filename.split('.')[-1] if '.' in filename else ''
-    return filename, extension
+    return ParsedURL(scheme=p.scheme, filename=filename, extension=extension)
 
 
 def parse(url: str):
@@ -200,10 +202,10 @@ def parse(url: str):
     """
     with open(url, 'rb') as fd:
         desc = parse_fd(fd=fd)
-        filename, extension = parse_uri(url)
+        parse_res = parse_uri(url)
         desc.url = url
-        desc.filename = filename
-        desc.extension = extension
+        desc.filename = parse_res.filename
+        desc.extension = parse_res.extension
         desc.aspect_ratio = calculate_aspect_ratio(desc.width, desc.height)
 
         return desc
