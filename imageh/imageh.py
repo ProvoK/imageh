@@ -1,9 +1,18 @@
 from collections import namedtuple
 from enum import Enum
+from functools import partial
 import json
 import re
 import struct
-from urllib.parse import urlparse
+
+try:
+    from urllib.parse import urlparse, urlencode
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
+except ImportError:  # Python 2 compatibility
+    from urlparse import urlparse
+    from urllib import urlencode
+    from urllib2 import urlopen, Request, HTTPError
 
 import attr
 
@@ -92,11 +101,11 @@ class BaseParser(object):
     """
     TODO DOC
     """
+    bytes_to_read = 0
 
-    def __init__(self, fd):
-        # type: (BinaryIO) -> None
-        self.fd = fd
-        self.fd.seek(0)
+    def __init__(self, fd, chunk):
+        # type: (BinaryIO, List) -> None
+        self.chunk = chunk + fd.read(self.bytes_to_read)
 
     @staticmethod
     def check_format(head):
@@ -122,16 +131,15 @@ class PNGParser(BaseParser):
             - https://en.wikipedia.org/wiki/Portable_Network_Graphics
             - https://www.w3.org/TR/2003/REC-PNG-20031110/
         """
-        chunk = self.fd.read(self.bytes_to_read)
-        ihdr_pos = self.ihdr_reg.search(chunk).start() + 4
-        ihdr = chunk[ihdr_pos: ihdr_pos + 13]
+        ihdr_pos = self.ihdr_reg.search(self.chunk).start() + 4
+        ihdr = self.chunk[ihdr_pos: ihdr_pos + 13]
         # Width, Height, Bit depth, Color type, Compression method
         # Filter method, Interlace method
         w, h, bd, ct, cm, fm, im = struct.unpack('>2L5B', ihdr[0:13])
         descriptor = PNGDescriptor()
         descriptor.width = w
         descriptor.height = h
-        descriptor.bytes_read = self.bytes_to_read
+        descriptor.bytes_read = len(self.chunk)
         descriptor.bit_depth = bd
         descriptor.color_type = PNGColorType(ct)
         descriptor.compression = PNGCompressionType(cm)
@@ -152,10 +160,8 @@ class GIFParser(BaseParser):
         Sources:
             - https://www.w3.org/Graphics/GIF/spec-gif89a.txt
         """
-        chunk = self.fd.read(self.bytes_to_read)
-
         # Version, width, height, packed, background color index, pixel aspect ratio
-        ver, w, h, pack, bci, par = struct.unpack('<3sHH3B', chunk[3:])
+        ver, w, h, pack, bci, par = struct.unpack('<3sHH3B', self.chunk[3:][:10])
 
         packed_bin = bin(pack)[2:]
 
@@ -163,7 +169,7 @@ class GIFParser(BaseParser):
         descriptor.version = ver.decode('ascii')
         descriptor.width = w
         descriptor.height = h
-        descriptor.bytes_read = self.bytes_to_read
+        descriptor.bytes_read = len(self.chunk)
         descriptor.pixel_aspect_ratio = par
         descriptor.color_bits = int(packed_bin[1:4], 2) + 1
         descriptor.has_color_table = bool(packed_bin[0])
@@ -200,7 +206,10 @@ def analyze(url: str):
     :param url:
     :return:
     """
-    with open(url, 'rb') as fd:
+
+    open_func = urlopen if url.startswith('http') else partial(open, mode='rb')
+
+    with open_func(url) as fd:
         desc = parse_fd(fd=fd)
         parse_res = parse_uri(url)
         desc.url = url
@@ -220,9 +229,9 @@ def parse_fd(fd):
     """
     chunk = fd.read(4)
     if PNGParser.check_format(chunk):
-        parser = PNGParser(fd)
+        parser = PNGParser(fd, chunk)
     elif GIFParser.check_format(chunk):
-        parser = GIFParser(fd)
+        parser = GIFParser(fd, chunk)
     else:
         raise UnsupportedFormatError('Unknown image format')
 
