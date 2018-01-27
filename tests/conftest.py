@@ -1,4 +1,7 @@
 import os
+import subprocess
+
+import pytest
 
 from imageh.imageh import (
     PNGDescriptor,
@@ -18,6 +21,19 @@ FOLDER_PATH = join(TEST_DIR_PATH, 'static')
 
 HTTP_PORT = 8888
 HTTP_PATH = 'http://localhost:{}'.format(HTTP_PORT)
+
+
+@pytest.fixture(autouse=True, scope='session')
+def http_server():
+    null_fd = open(os.devnull, 'w')
+    proc = subprocess.Popen(
+        ['python', '-m', 'http.server', str(HTTP_PORT)],
+        cwd=FOLDER_PATH,
+        stdout=null_fd,
+        stderr=null_fd
+    )
+    yield
+    proc.terminate()
 
 
 def make_descriptor(**kwargs):
