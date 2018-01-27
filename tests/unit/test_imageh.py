@@ -6,16 +6,16 @@ from imageh import imageh
 
 import pytest
 
-from tests.conftest import IMAGES, UNSUPPORTED_IMAGES
+from tests.conftest import images, unsupported_images, FOLDER_PATH
 
 
-@pytest.mark.parametrize('filename, descriptor', IMAGES)
+@pytest.mark.parametrize('filename, descriptor', images(FOLDER_PATH))
 def test_analyze_generate_correct_descriptor(filename, descriptor):
     generated_descriptor = imageh.analyze(filename)
     assert descriptor == generated_descriptor
 
 
-@pytest.mark.parametrize('filename, descriptor', IMAGES)
+@pytest.mark.parametrize('filename, descriptor', images(FOLDER_PATH))
 def test_parse_fd_reads_correctly(filename, descriptor):
     with open(filename, 'rb') as fd:
         generated_descriptor = imageh.parse_fd(fd)
@@ -29,7 +29,7 @@ def test_parse_fd_reads_correctly(filename, descriptor):
         assert descriptor == generated_descriptor
 
 
-@pytest.mark.parametrize('filename', UNSUPPORTED_IMAGES)
+@pytest.mark.parametrize('filename', unsupported_images(FOLDER_PATH))
 def test_parse_raises_exception_with_unsupported_file_formats(filename):
     with pytest.raises(imageh.UnsupportedFormatError):
         imageh.analyze(filename)
