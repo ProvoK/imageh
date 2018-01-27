@@ -9,7 +9,8 @@ import attr
 
 from .imports import (
     urlparse,
-    urlopen
+    urlopen,
+    URLError
 )
 
 
@@ -17,7 +18,7 @@ class ImagehError(Exception):
     pass
 
 
-class UnsupportedFormatError(ImagehError):
+class UnknownFormatError(ImagehError):
     pass
 
 
@@ -204,16 +205,23 @@ def analyze(url: str):
     """
 
     open_func = urlopen if url.startswith('http') else partial(open, mode='rb')
+    try:
+        with open_func(url) as fd:
+            desc = parse_fd(fd=fd)
+            parse_res = parse_uri(url)
+            desc.url = url
+            desc.filename = parse_res.filename
+            desc.extension = parse_res.extension
+            desc.aspect_ratio = calculate_aspect_ratio(desc.width, desc.height)
 
-    with open_func(url) as fd:
-        desc = parse_fd(fd=fd)
-        parse_res = parse_uri(url)
-        desc.url = url
-        desc.filename = parse_res.filename
-        desc.extension = parse_res.extension
-        desc.aspect_ratio = calculate_aspect_ratio(desc.width, desc.height)
-
-        return desc
+            return desc
+    except (FileNotFoundError, URLError) as err:
+        raise FileNotFoundError(err) from err
+    except UnknownFormatError:
+        raise
+    except Exception:
+        # TODO log error
+        raise ImagehError('Unknown error...see log')
 
 
 def parse_fd(fd):
@@ -229,6 +237,6 @@ def parse_fd(fd):
     elif GIFParser.check_format(chunk):
         parser = GIFParser(fd, chunk)
     else:
-        raise UnsupportedFormatError('Unknown image format')
+        raise UnknownFormatError('Unknown or not supported image format')
 
     return parser.parse()

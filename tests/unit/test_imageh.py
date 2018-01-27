@@ -37,11 +37,20 @@ def test_parse_fd_reads_correctly(filename, descriptor):
 
 @pytest.mark.parametrize('filename', unsupported_images(FOLDER_PATH))
 def test_parse_raises_exception_with_unsupported_file_formats(filename):
-    with pytest.raises(imageh.UnsupportedFormatError):
+    with pytest.raises(imageh.UnknownFormatError):
         imageh.analyze(filename)
 
 
 @pytest.mark.parametrize('filename', unsupported_images(HTTP_PATH))
 def test_parse_raises_exception_with_unsupported_file_formats_remote(filename):
-    with pytest.raises(imageh.UnsupportedFormatError):
+    with pytest.raises(imageh.UnknownFormatError):
         imageh.analyze(filename)
+
+
+@pytest.mark.parametrize('uri', [
+    '/not/existent/path',
+    'http://yolo'
+])
+def test_analyze_not_existent_path_or_file_raises_correct_error(uri):
+    with pytest.raises(FileNotFoundError):
+        imageh.analyze(uri)
