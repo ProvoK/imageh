@@ -52,6 +52,7 @@ lint: ## check style with flake8
 	flake8 imageh tests
 
 test: install ## run tests quickly with the default Python
+	pip install .['test']
 	py.test
 	
 
@@ -85,4 +86,4 @@ dist: clean ## builds source and wheel package
 	ls -l dist
 
 install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+	pip install .
