@@ -1,10 +1,10 @@
 # !/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='Image Header',
-    packages=['imageh',],
+    packages=['imageh'],
     version='0.1.0',
     description='Lightweight header reader for images.',
     author='Vittorio Camisa',
@@ -27,11 +27,18 @@ setup(
         'Topic :: Software Development',
     ],
     install_requires=[
-        'Click',
+        'click==6.7',
+        'attrs==17.4.0'
     ],
     entry_points={
         'console_scripts': [
             'imageh = imageh.cli:cli'
+        ]
+    },
+    extras_require={
+        'test': [
+            'pytest==3.3.2',
+            'pexpect==4.3.1'
         ]
     }
 )
