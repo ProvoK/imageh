@@ -4,7 +4,7 @@ import struct
 
 import attr
 
-from . import BaseParser, Descriptor
+from . import BaseParser, BaseDescriptor
 from ..serializer import Serializer
 
 
@@ -34,7 +34,7 @@ class PNGInterlaceType(Enum):
 
 
 @attr.s
-class PNGDescriptor(Descriptor, Serializer):
+class Descriptor(BaseDescriptor, Serializer):
     format = 'PNG'
     bit_depth = attr.ib(init=False)
     color_type = attr.ib(init=False)
@@ -43,7 +43,7 @@ class PNGDescriptor(Descriptor, Serializer):
     interlace_method = attr.ib(init=False)
 
 
-class PNGParser(BaseParser):
+class Parser(BaseParser):
     ihdr_reg = re.compile(b'IHDR', flags=re.DOTALL)
     bytes_to_read = 50
 
@@ -62,7 +62,7 @@ class PNGParser(BaseParser):
         # Width, Height, Bit depth, Color type, Compression method
         # Filter method, Interlace method
         w, h, bd, ct, cm, fm, im = struct.unpack('>2L5B', ihdr[0:13])
-        descriptor = PNGDescriptor()
+        descriptor = Descriptor()
         descriptor.width = w
         descriptor.height = h
         descriptor.bytes_read = len(self.chunk)

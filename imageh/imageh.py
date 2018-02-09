@@ -6,6 +6,7 @@ from .imports import (
     urlopen,
     URLError
 )
+from . import formats
 
 
 class ImagehError(Exception):
@@ -59,9 +60,9 @@ def analyze(url: str):
         raise FileNotFoundError(err) from err
     except UnknownFormatError:
         raise
-    except Exception:
+    except Exception as err:
         # TODO log error
-        raise ImagehError('Unknown error...see log')
+        raise ImagehError('Unknown error...{}'.format(err))
 
 
 def parse_fd(fd):
@@ -72,18 +73,9 @@ def parse_fd(fd):
     :return:
     """
     chunk = fd.read(4)
-    # TODO LOADER in formats package
-    # pseudocode
-    # for parser_cls in formats.load():
-    #     if parser_cls.check_format(chunk):
-    #         parser = parser_cls(fd, chunk)
-    #         return parser.parse()
 
-    if PNGParser.check_format(chunk):
-        parser = PNGParser(fd, chunk)
-    elif GIFParser.check_format(chunk):
-        parser = GIFParser(fd, chunk)
-    else:
-        raise UnknownFormatError('Unknown or not supported image format')
-
-    return parser.parse()
+    for parser_cls in formats.load():
+        if parser_cls.check_format(chunk):
+            parser = parser_cls(fd, chunk)
+            return parser.parse()
+    raise UnknownFormatError('Unknown or not supported image format')

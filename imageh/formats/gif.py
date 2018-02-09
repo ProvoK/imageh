@@ -3,12 +3,12 @@ import struct
 
 import attr
 
-from . import Descriptor, BaseParser
+from . import BaseDescriptor, BaseParser
 from ..serializer import Serializer
 
 
 @attr.s
-class GIFDescriptor(Descriptor, Serializer):
+class Descriptor(BaseDescriptor, Serializer):
     format = 'GIF'
     version = attr.ib(init=False)
     pixel_aspect_ratio = attr.ib(init=False)
@@ -18,7 +18,7 @@ class GIFDescriptor(Descriptor, Serializer):
     color_table_sorted = attr.ib(init=False)
 
 
-class GIFParser(BaseParser):
+class Parser(BaseParser):
     bytes_to_read = 13
 
     @staticmethod
@@ -35,7 +35,7 @@ class GIFParser(BaseParser):
 
         packed_bin = bin(pack)[2:]
 
-        descriptor = GIFDescriptor()
+        descriptor = Descriptor()
         descriptor.version = ver.decode('ascii')
         descriptor.width = w
         descriptor.height = h
