@@ -3,15 +3,18 @@ import subprocess
 
 import pytest
 
-from imageh.imageh import (
-    PNGDescriptor,
+from imageh.formats.png import (
+    Descriptor as PNGDescriptor,
     PNGColorType,
     PNGInterlaceType,
     PNGFilterType,
     PNGCompressionType,
-    GIFDescriptor,
-    PNGParser,
-    GIFParser
+    Parser as PNGParser,
+)
+
+from imageh.formats.gif import (
+    Descriptor as GIFDescriptor,
+    Parser as GIFParser
 )
 
 join = os.path.join

@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help
+.PHONY: clean clean-test clean-pyc clean-build docs help test
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -47,6 +47,9 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -rf .pytest_cache/
+
+clean-venv: ## Clean virtualenv
+	pip freeze | xargs pip uninstall -y
 
 lint: ## check style with flake8
 	flake8 imageh tests
