@@ -65,3 +65,4 @@ target/
 # Editors
 *.swp
 .idea/*
+.ropeproject/*
