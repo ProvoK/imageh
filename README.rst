@@ -13,8 +13,8 @@ Image Header
 .. image:: https://img.shields.io/travis/ProvoK/imageh.svg
         :target: https://travis-ci.org/ProvoK/imageh
 
-.. image:: https://readthedocs.org/projects/imageh/badge/?version=latest
-        :target: https://imageh.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/imageh-header/badge/?version=latest
+        :target: https://imageh-header.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 .. image:: https://pyup.io/repos/github/ProvoK/imageh/shield.svg
