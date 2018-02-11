@@ -26,7 +26,7 @@ Lightweight library for reading images metadata.
 
 
 * Free software: MIT license
-* Documentation: https://imageh-header.readthedocs.io.
+* Documentation: https://image-header.readthedocs.io/en/latest/.
 
 
 Why Imageh? Why not PIL?
