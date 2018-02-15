@@ -32,9 +32,23 @@ def http_server():
     proc = subprocess.Popen(
         ['python', '-m', 'http.server', str(HTTP_PORT)],
         cwd=FOLDER_PATH,
-        stdout=null_fd,
-        stderr=null_fd
+        stdout=subprocess.PIPE,
+        stderr=null_fd,
+        bufsize=1
     )
+    # with proc.stdout:
+    #     for line in iter(proc.stdout.readline, b''):
+    #         if line.startswith('Serving'):
+    #             break
+
+    # Waits python http server to starts.
+    # This is a very hacky and bad workaround.
+    # The above commented solution would be better,
+    # but it's not safe and can block indefinitely on certain OS,
+    # for example TravisCI runners :)
+    import time
+    time.sleep(1)
+
     yield
     proc.terminate()
 
