@@ -1,21 +1,18 @@
 import re
 import struct
 
-import attr
-
 from . import BaseDescriptor, BaseParser
 from ..serializer import Serializer
 
 
-@attr.s
 class Descriptor(BaseDescriptor, Serializer):
     format = 'GIF'
-    version = attr.ib(init=False)
-    pixel_aspect_ratio = attr.ib(init=False)
-    color_bits = attr.ib(init=False)
-    has_color_table = attr.ib(init=False)
-    color_table_size = attr.ib(init=False)
-    color_table_sorted = attr.ib(init=False)
+    version = None
+    pixel_aspect_ratio = None
+    color_bits = None
+    has_color_table = None
+    color_table_size = None
+    color_table_sorted = None
 
 
 class Parser(BaseParser):

@@ -2,8 +2,6 @@ from enum import Enum
 import re
 import struct
 
-import attr
-
 from . import BaseParser, BaseDescriptor
 from ..serializer import Serializer
 
@@ -33,14 +31,13 @@ class PNGInterlaceType(Enum):
     ADAM7 = 1
 
 
-@attr.s
 class Descriptor(BaseDescriptor, Serializer):
     format = 'PNG'
-    bit_depth = attr.ib(init=False)
-    color_type = attr.ib(init=False)
-    compression = attr.ib(init=False)
-    filter_method = attr.ib(init=False)
-    interlace_method = attr.ib(init=False)
+    bit_depth = None
+    color_type = None
+    compression = None
+    filter_method = None
+    interlace_method = None
 
 
 class Parser(BaseParser):

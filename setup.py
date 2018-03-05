@@ -26,7 +26,6 @@ setup(
     ],
     install_requires=[
         'click==6.7',
-        'attrs==17.4.0'
     ],
     entry_points={
         'console_scripts': [
