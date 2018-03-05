@@ -1,11 +1,9 @@
 from collections import namedtuple
 from functools import partial
 
-from .imports import (
-    urlparse,
-    urlopen,
-    URLError
-)
+from urllib.parse import urlparse
+from urllib.request import urlopen
+from urllib.error import URLError
 from . import formats
 
 
