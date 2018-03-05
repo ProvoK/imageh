@@ -46,7 +46,7 @@ Imageh let's you retrieve image's metadata from file-like objects or even an URL
 
 - Supported formats: PNG, GIF. (More coming, please contribute!)
 - An easy CLI interface to use Imageh as an utility.
-- Multiple output formats: JSON, CSV. (More coming, please contribute!)
+- Multiple output formats (WIP): JSON, XML (More coming, please contribute!)
 
 
 Credits
